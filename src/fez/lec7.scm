@@ -1,9 +1,13 @@
-;; need a quote macro
-;; 'foo ==> (quote foo) --> foo
-;; (lambda (x) (+ x y)) -=> (closure ((x) (+ x y) <env>))
-;;                          bound-variable-list, body, environment
+;; Author: Gerald Sussman?
+;; License: See video linked below, believed to be Creative Commons but just because the video is doesn't mean a transcription of the video is, too
 
-;; reserved words < fingers and toes
+;; TO BE CLEAR, THIS FILE IS NOT MY WORK I ONLY TRANSCRIBED IT!
+
+;; this is what was written on the board during Lecture 7 of the SICP course, 
+;; available at:
+;; http://www.youtube.com/watch?v=0m6hoOelZH8
+;; I highly recommend watching this lecture....you'll also find out where I got 
+;; the idea to call this project Fez!
 
 (define eval
   (lambda (exp env)
@@ -80,8 +84,4 @@
 	  (else
 	   (assq sym (cdr alist))))))
 
-
 ;; primitive? and prim-op left undefined 
-
-
-;;(eval '(((lambda (x) (lambda (y) (+ x y))) 3) 4) <e0>)

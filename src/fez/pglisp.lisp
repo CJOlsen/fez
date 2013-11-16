@@ -1,6 +1,8 @@
-;; from http://ep.yimg.com/ty/cdn/paulgraham/jmc.lisp, (probably) translated by
+;; from http://ep.yimg.com/ty/cdn/paulgraham/jmc.lisp, translated by
 ;; the great Paul Graham into Common Lisp
 ;;
+;; TO BE CLEAR, THIS IS NOT MY CODE, IT'S HERE FOR REFERENCE
+
 
 
 ; The Lisp defined in McCarthy's 1960 paper, translated into CL.

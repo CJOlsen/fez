@@ -1,19 +1,16 @@
 ;; Author: Christopher Olsen
 ;; Copyright 2013
-;; License: none at the moment, this isn't yet finished
-
-
-(ns fez.core)
-
+;; License: GNU GPLv3 (ask if you'd like it licensed differently)
 ;;
-;; fez is a simple Scheme REPL built in Clojure based mostly on SICP's Chapter 
-;;  4.1 which should be considered the main source of documentation.  It isn't 
+;; Fez is a simple Scheme REPL built in Clojure based mostly on SICP's Chapter 
+;;  4 which should be considered the main source of documentation.  It isn't 
 ;;  a full Scheme, it's more like Clojure's wearing a fun hat - like a fez.
 ;;
 ;; SICP = The Structure and Interpretation of Computer Programs by Hal Abelson
-;;        and Gerald Sussman
+;;        and Gerald Sussman 
+;;        http://mitpress.mit.edu/sicp/full-text/book/book.html
 
-;; cdddadr
+(ns fez.core)
 
 (defn about-fez
   []
@@ -26,12 +23,6 @@
 
 (def ^:dynamic *debug* false)
 
-
-;;
-;; problem: 
-;; the procedure sq's environment contains sq and leads to an infinite recursive loop
-;;
-
 (defn scm-eval
   [exp env]
   ;;(println "\nscm-eval with:" exp "\nand env:" env "\n")
@@ -41,9 +32,9 @@
         (assignment? exp) (eval-assignment exp env)
         (definition? exp) (eval-definition exp env)
         (if? exp) (eval-if exp env)
-        (lambda? exp) (doall (make-procedure (lambda-parameters exp)
-                                             (lambda-body exp)
-                                             env))
+        (lambda? exp) (make-procedure (lambda-parameters exp)
+                                      (lambda-body exp)
+                                      env)
         (begin? exp) (eval-sequence (begin-actions exp) env)
         (cond? exp) (scm-eval (cond->if exp) env)
         (application? exp) (scm-apply (scm-eval (operator exp) env)
@@ -88,11 +79,10 @@
 
 (defn eval-definition
   [exp env]
-  ;;(println "eval-definition, calling define-variable! with \nexp:" exp "\nenv:" env "\ndef-var...:" (definition-variable exp) "\nval:" (scm-eval (definition-value exp) env))
-  (doall (define-variable! (definition-variable exp)
-           (scm-eval (definition-value exp) env)
-           env)
-         'ok))
+  (define-variable! (definition-variable exp)
+    (scm-eval (definition-value exp) env)
+    env)
+  'ok)
 
 ;; representing expressions
 
@@ -105,7 +95,6 @@
 
 (defn variable?
   [exp]
-  ;;(println "\n\nvariable? with" exp "\n")
   (symbol? exp))
 
 (defn quoted? 
@@ -118,8 +107,7 @@
 
 (defn tagged-list?
   [exp tag]
-  ;;(if (pair? exp)
-  (if (list? exp) ;; good substitution for "pair?"?  (...tagged-lists?)
+  (if (list? exp)
     (= (first exp) tag)
     false))
 
@@ -204,7 +192,6 @@
 (defn last-exp?
   [sequence]
   (= 1 (count sequence)))
-;;(nil? (rest sequence)))
 
 (defn first-exp
   [sequence]
@@ -227,7 +214,6 @@
 
 (defn application?
   [exp]
-  ;;(pair? exp))
   (list? exp)) ;; is "list?" a good approximation of "pair?"?
 
 (defn operator
@@ -292,42 +278,27 @@
                  (sequence->exp (cond-actions _first))
                  (expand-clauses _rest))))))
 
-
 ;; predicates
 
 ;; (defn true?
 ;;   [x]
 ;;   (not (= x false)))
-
 ;; (defn false?
 ;;   [x]
 ;;   (= x false))
 
 ;; procedures
 
-;; we assume we have (apply-primitive-procedure <proc> <args>)
-;;                   (primitive-procedure? <proc>)
-
-;; (defn make-procedure
-;;   [parameters body env]
-;;   (println "\ninside make-procedure with:" parameters body env)
-;;   (let [closure-copy (atom (deref (first env)))]
-;;     (println "closure-copy:" closure-copy)
-;;     (list 'procedure parameters body closure-copy)))
-
-
 (defn copy-environment
-  "Copys an environment into a new atom to avoid infinite recursion of lambda
+  "Copies an environment into a new atom to avoid infinite recursion of lambda
    functions being defined in the environments they're defined in.  This has 
    implications for how lambda functions behave."
   [environment]
-  (doall (map #(atom (deref %)) environment))) ;; only called in scm-eval for lambda's
-
-
+  (doall (map #(atom (deref %)) environment))) 
 
 (defn make-procedure
   [parameters body env]
-  (doall (list 'procedure parameters body env)))
+  (doall (list 'procedure parameters body (copy-environment env))))
 
 (defn compound-procedure?
   [p]
@@ -339,8 +310,6 @@
 
 (defn procedure-body
   [p]
-  ;;(println (count p))
-  ;;(println "\nin procudure body with:" p "\n")
   (first (rest (rest p))))
 
 (defn procedure-environment
@@ -414,29 +383,24 @@
     (swap! frame #(assoc % var val))))
 
 
-;; ;; needed ideas for a lisp to be a lisp
-;; 1. conditionals
-;; 2. a function type
-;; 3. recursion
-;; 4. variables - variables are pointers, only values have types
-;; 5. garbage collection
-;; 6. program composed of expressions
-;; 7. a symbol type (symbols can be tested for equality by comparing pointers)
-;; 8. a notation for code
-;; 9. the whole language always available
-
 ;; running the evaluator as a program
+
+(defn square
+  [x]
+  (* x x))
 
 (def primitive-procedures ;; should this be a map?  probably....
   [(list 'car first) 
    (list 'cdr rest)
-   ;(list 'cons cons)  ;; conj???
-   (list 'null nil)   ;; is this gonna work???
+   (list 'cons cons)
+   (list 'null nil)   ;; will this work???
    (list '+ +)
    (list '- -)
    (list '* *)
    (list '/ /)
    (list 'about-fez about-fez)
+   (list 'sq square)
+   (list 'cube (fn [x] (* x x x)))
    ;;<more primitives>
    ])
 
@@ -475,6 +439,7 @@
   [proc]
   (first (rest proc)))
 
+
 ;; driver loop
 
 (def input-prompt ";;; Fez-input: ")
@@ -483,19 +448,14 @@
 (declare prompt-for-input announce-output user-print)
 (defn driver-loop
   []
-                                        ;(println "\ndriver-loop 1")
   (doall (prompt-for-input input-prompt))
-                                        ;(println "\ndriver-loop 2")
   (let [input (read-line)]
-                                        ;(println "\ndriver-loop 3")
     (if (= (count input) 0)
       (announce-output output-prompt)
       (let [output (scm-eval (read-string input) the-global-environment)]
-        ;;(println "\ndriver-loop 4")
         (announce-output output-prompt)
         (user-print output)
         (println))))
-                                        ;(println "\ndriver-loop 5"))))
   (driver-loop))
 
 (defn prompt-for-input
@@ -516,7 +476,7 @@
                  '<prodedure-env>))
     (print object)))
 
-;; custom error macro (calls down to Java's Throwable)
+;; custom error macro (calls down to Java's Throwable.  doesn't work very well)
 (defmacro error
   [& args]
   `(throw (Throwable. (str ~@args))))
@@ -524,18 +484,7 @@
 
 ;; main
 
-;; (defn -main
-;;   [& args]
-;;   (println "\nWelcome to Fez!  A (very) simple Scheme-like LISP implemented in Clojure.\nFor implementation details see the included source code and Chapter 4 of \nThe Structure and Interpretation of Computer Programs (SICP), available \nat http://mitpress.mit.edu/sicp/full-text/book/book.html.  \nType (about-fez) for more details.\n\n") 
-;;   (driver-loop))
-
-
-
-
-;; (#<Atom@85d9a4: {about-fez (primitive #<core$about_fez fez.core$about_fez@175cb80>),
-;;                  / (primitive #<core$_SLASH_ clojure.core$_SLASH_@12df081>),
-;;                  * (primitive #<core$_STAR_ clojure.core$_STAR_@90fc4b>), - (primitive #<core$_ clojure.core$_@1d649c5>),
-;;                  + (primitive #<core$_PLUS_ clojure.core$_PLUS_@1aead64>),
-;;                  null (primitive nil),
-;;                  cdr (primitive #<core$rest clojure.core$rest@542de3>),
-;;                  car (primitive #<core$first clojure.core$first@170e652>)}>)
+(defn -main
+  [& args]
+  (println "\nWelcome to Fez!  A (very) simple Scheme-like LISP implemented in Clojure.\nFor implementation details see the included source code and Chapter 4 of \nThe Structure and Interpretation of Computer Programs (SICP), available \nat http://mitpress.mit.edu/sicp/full-text/book/book.html.  \nType (about-fez) for more details.\n\n") 
+  (driver-loop))

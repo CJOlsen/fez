@@ -38,6 +38,7 @@ When changing the program restarting the REPL solves half the problems that show
 
 There's a function called "primitive-procedures" that currently looks like this, though it will change in the future:
 
+```clojure
 (def primitive-procedures
   [(list 'car first) 
    (list 'cdr rest)
@@ -52,6 +53,7 @@ There's a function called "primitive-procedures" that currently looks like this,
    (list 'cube (fn [x] (* x x x)))
    ;;<more primitives>
    ])
+```
 
 The list syntax is a vestige from the Scheme-in-Scheme of SICP, but if you want to add something this is the place to do it.  You can map to a Clojure built-in or any function you define in the file.  You can also add lambda functions inline, as shown in the "cube" function.  The sky's the limit.
 
